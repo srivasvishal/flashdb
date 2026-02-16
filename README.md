@@ -15,7 +15,7 @@ A distributed, persistent key-value store built in Java 21, implementing the arc
 
 ## Tech Stack
 
-- **Java 21** (Virtual Threads)
+- **Java ** (Virtual Threads)
 - **Netty** - Non-blocking I/O
 - **Protocol Buffers** - Message serialization
 - **JUnit 5** - Testing
@@ -40,7 +40,7 @@ mvn exec:java -Dexec.mainClass="com.flashdb.FlashDBMain"
 
 ### Run Client Demo
 
-**Start the server first** (in a separate terminal), then run the client:
+**Start the server first** , then run the client:
 
 ```bash
 # Terminal 1 - Start server
@@ -83,28 +83,6 @@ mvn exec:java -Dexec.args="8082 ./data3"
 mvn test
 ```
 
-## Project Structure (Component-wise)
-
-```
-flashdb/
-├── src/main/java/com/flashdb/
-│   ├── storage/          # Phase 1: MemTable, WAL, SSTable, SparseIndex, StorageEngine
-│   ├── protocol/         # Phase 2: Binary wire protocol
-│   ├── server/           # Phase 2: Netty server + handler
-│   ├── client/           # Client SDK (knows which server holds which key)
-│   ├── distributed/     # Phase 3: HashRing, DistributedKVClient
-│   ├── compaction/      # Phase 4: CompactionTask, SSTableStreamIterator
-│   └── FlashDBMain.java
-├── src/main/proto/       # Protobuf definitions
-└── src/test/
-```
-
-## Resume Bullet Points
-
-- *"Implemented an LSM-Tree Storage Engine from scratch in Java, utilizing MemTables (SkipList) and SSTables for high-throughput write operations."*
-- *"Engineered a custom binary wire protocol using Netty, achieving low-latency non-blocking network communication."*
-- *"Designed a Distributed Hash Ring with virtual nodes to ensure even data distribution and minimal reshuffling during node scaling."*
-- *"Built a multi-threaded compaction engine to merge on-disk data segments in the background without blocking active client reads."*
 
 ## License
 
