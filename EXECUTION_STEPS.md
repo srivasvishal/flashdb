@@ -10,11 +10,7 @@
 
 ## Step 1: Navigate to Project
 
-```bash
-cd /Users/vishalsrivastava/Dev/temp/flashdb
-```
-
----
+cd /project/path/
 
 ## Step 2: Build the Project
 
@@ -60,7 +56,7 @@ mvn exec:java
 **Terminal 2** (new terminal, same directory):
 
 ```bash
-cd /Users/vishalsrivastava/Dev/temp/flashdb
+cd 
 mvn exec:java -Pclient
 ```
 
