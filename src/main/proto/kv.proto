@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package com.flashdb.protobuf;
+
+option java_package = "com.flashdb.protobuf";
+option java_outer_classname = "KvProto";
+
+message KvRequest {
+  Operation op = 1;
+  string key = 2;
+  bytes value = 3;
+}
+
+message KvResponse {
+  Status status = 1;
+  bytes value = 2;
+  string message = 3;
+}
+
+enum Operation {
+  OP_UNKNOWN = 0;
+  OP_PUT = 1;
+  OP_GET = 2;
+  OP_DEL = 3;
+}
+
+enum Status {
+  STATUS_UNKNOWN = 0;
+  STATUS_OK = 1;
+  STATUS_NOT_FOUND = 2;
+  STATUS_ERROR = 3;
+}
