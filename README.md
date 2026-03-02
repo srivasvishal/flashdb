@@ -77,6 +77,40 @@ mvn exec:java -Dexec.args="8081 ./data2"
 mvn exec:java -Dexec.args="8082 ./data3"
 ```
 
+### Key Distribution Demo
+
+Shows which keys land on which node (consistent hashing visualization):
+
+```bash
+mvn exec:java -Pkey-distribution
+```
+
+### Test Read-from-Replica (Node Failure)
+
+Verifies that GETs succeed from replicas when the primary node is down:
+
+```bash
+# Terminal 1-3: Start 3-node cluster
+# Terminal 4:
+mvn exec:java -Presilience-test
+# When prompted, kill one node (Ctrl+C), then press Enter
+```
+
+### Run Multi-Node Latency Benchmark
+
+Start the 3-node cluster first, then in a 4th terminal:
+
+```bash
+mvn exec:java -Platency-benchmark
+```
+
+Reports GET/PUT latency (min, avg, p50, p95, p99, max) and throughput. Customize with:
+
+```bash
+# Custom servers and options
+mvn exec:java -Platency-benchmark -Dexec.args="host1:8080,host2:8081 --ops 10000 --warmup 1000 --replication 2"
+```
+
 ### Run Tests
 
 ```bash

@@ -8,9 +8,9 @@ import java.util.Map;
 
 /**
  * Distributed client that routes requests to the correct server using the Hash Ring.
- * Supports replication: writes to primary + replicas, reads from primary.
+ * Supports replication: writes to primary + replicas, reads from primary with fallback to replicas if primary fails.
  */
-public class DistributedKVClient {
+public class DistributedKVClient implements AutoCloseable {
 
     private final HashRing hashRing;
     private final Map<String, KVClient> clients = new HashMap<>();
@@ -18,17 +18,30 @@ public class DistributedKVClient {
 
     public DistributedKVClient(List<String> serverAddresses, int replicationFactor) throws InterruptedException {
         this.hashRing = new HashRing();
-        this.replicationFactor = Math.min(replicationFactor, serverAddresses.size());
+        int replication = Math.min(replicationFactor, serverAddresses.size());
 
         for (String addr : serverAddresses) {
-            hashRing.addServer(addr);
             String[] parts = addr.split(":");
             String host = parts[0];
             int port = Integer.parseInt(parts[1]);
-            KVClient client = new KVClient(host, port);
-            client.connect();
-            clients.put(addr, client);
+            try {
+                KVClient client = new KVClient(host, port);
+                client.connect();
+                hashRing.addServer(addr);
+                clients.put(addr, client);
+            } catch (Exception e) {
+                System.err.println("[DistributedKVClient] Could not connect to " + addr + " (skipping): " + e.getMessage());
+            }
         }
+        if (clients.isEmpty()) {
+            throw new IllegalStateException("Could not connect to any server. Ensure at least one node is running.");
+        }
+        this.replicationFactor = Math.min(replication, clients.size());
+    }
+
+    /** Set timeout for operations (propagates to all node connections). Use shorter for fail-fast when testing resilience. */
+    public void setTimeoutSeconds(int seconds) {
+        clients.values().forEach(c -> c.setTimeoutSeconds(seconds));
     }
 
     public void put(String key, byte[] value) throws Exception {
@@ -46,9 +59,18 @@ public class DistributedKVClient {
     }
 
     public byte[] get(String key) throws Exception {
-        String server = hashRing.getServer(key);
-        if (server == null) throw new IllegalStateException("No servers available");
-        return clients.get(server).get(key);
+        List<String> servers = hashRing.getReplicaServers(key, replicationFactor);
+        if (servers.isEmpty()) throw new IllegalStateException("No servers available");
+        Exception lastError = null;
+        for (String server : servers) {
+            try {
+                return clients.get(server).get(key);
+            } catch (Exception e) {
+                lastError = e;
+            }
+        }
+        if (lastError != null) throw lastError;
+        return null;
     }
 
     public void del(String key) throws Exception {
@@ -62,6 +84,7 @@ public class DistributedKVClient {
         }
     }
 
+    @Override
     public void close() {
         clients.values().forEach(KVClient::close);
     }
